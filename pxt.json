@@ -2,7 +2,8 @@
     "name": "Dani and Adam Project",
     "description": "",
     "dependencies": {
-        "device": "*"
+        "device": "*",
+        "animation": "*"
     },
     "files": [
         "main.blocks",
@@ -15,7 +16,7 @@
         "test.ts"
     ],
     "targetVersions": {
-        "target": "1.12.17",
+        "target": "1.12.18",
         "targetId": "arcade"
     },
     "supportedTargets": [

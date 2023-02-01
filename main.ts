@@ -120,23 +120,31 @@ scene.setBackgroundImage(img`
     3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
     3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
 `)
-let asteroid = sprites.create(img`
-    . . . . . . . c c c a c . . . .
-    . . c c b b b a c a a a c . . .
-    . c c a b a c b a a a b c c . .
-    . c a b c f f f b a b b b a . .
-    . c a c f f f 8 a b b b b b a .
-    . c a 8 f f 8 c a b b b b b a .
-    c c c a c c c c a b c f a b c c
-    c c a a a c c c a c f f c b b a
-    c c a b 6 a c c a f f c c b b a
-    c a b c 8 6 c c a a a b b c b c
-    c a c f f a c c a f a c c c b .
-    c a 8 f c c b a f f c b c c c .
-    . c b c c c c b f c a b b a c .
-    . . a b b b b b b b b b b b c .
-    . . . c c c c b b b b b c c . .
-    . . . . . . . . c b b c . . . .
-`, SpriteKind.Player)
-asteroid.x = randint(1, scene.screenWidth())
-asteroid.y = randint(1, scene.screenHeight())
+let small_asteroid_images = [sprites.space.spaceSmallAsteroid0, sprites.space.spaceSmallAsteroid1, sprites.space.spaceSmallAsteroid2, sprites.space.spaceSmallAsteroid3, sprites.space.spaceSmallAsteroid4, sprites.space.spaceSmallAsteroid5]
+let large_asteroid_images = [sprites.space.spaceAsteroid0, sprites.space.spaceAsteroid1, sprites.space.spaceAsteroid2, sprites.space.spaceAsteroid3, sprites.space.spaceAsteroid4]
+function spawnAsteroid(isLarge: boolean) {
+    let asteroid: Sprite;
+    let x = randint(10, scene.screenWidth() - 10)
+    let y = -30
+    let vx = randint(-5, 5)
+    if (isLarge) {
+        asteroid = sprites.create(large_asteroid_images[0], SpriteKind.Projectile)
+        asteroid.scale = 2
+        animation.runImageAnimation(asteroid, large_asteroid_images, 500, true)
+        asteroid.vy = 5
+        asteroid.vx = vx
+    } else {
+        asteroid = sprites.create(small_asteroid_images[0], SpriteKind.Projectile)
+        asteroid.scale = 1.5
+        animation.runImageAnimation(asteroid, small_asteroid_images, 100, true)
+        asteroid.vy = 10
+        asteroid.vx = vx * 2
+    }
+    
+    asteroid.x = x
+    asteroid.y = y
+    asteroid.setBounceOnWall(true)
+}
+
+spawnAsteroid(false)
+spawnAsteroid(true)
