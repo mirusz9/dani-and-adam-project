@@ -1,3 +1,5 @@
+let small_asteroid_images = [sprites.space.spaceSmallAsteroid0, sprites.space.spaceSmallAsteroid1, sprites.space.spaceSmallAsteroid2, sprites.space.spaceSmallAsteroid3, sprites.space.spaceSmallAsteroid4, sprites.space.spaceSmallAsteroid5]
+let large_asteroid_images = [sprites.space.spaceAsteroid0, sprites.space.spaceAsteroid1, sprites.space.spaceAsteroid2, sprites.space.spaceAsteroid3, sprites.space.spaceAsteroid4]
 scene.setBackgroundImage(img`
     ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -120,25 +122,6 @@ scene.setBackgroundImage(img`
     3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
     3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
 `)
-
-let asteroid = sprites.create(img`
-    . . . . . . . c c c a c . . . .
-    . . c c b b b a c a a a c . . .
-    . c c a b a c b a a a b c c . .
-    . c a b c f f f b a b b b a . .
-    . c a c f f f 8 a b b b b b a .
-    . c a 8 f f 8 c a b b b b b a .
-    c c c a c c c c a b c f a b c c
-    c c a a a c c c a c f f c b b a
-    c c a b 6 a c c a f f c c b b a
-    c a b c 8 6 c c a a a b b c b c
-    c a c f f a c c a f a c c c b .
-    c a 8 f c c b a f f c b c c c .
-    . c b c c c c b f c a b b a c .
-    . . a b b b b b b b b b b b c .
-    . . . c c c c b b b b b c c . .
-    . . . . . . . . c b b c . . . .
-`, SpriteKind.Player)
 let ship = sprites.create(img`
     . . . . . . . . . . . . . . . .
     . . . . . . . c d . . . . . . .
@@ -158,8 +141,7 @@ let ship = sprites.create(img`
     . c c c c c e e 2 2 2 2 4 2 e .
 `, SpriteKind.Player)
 controller.player1.moveSprite(ship)
-asteroid.x = randint(1, scene.screenWidth())
-asteroid.y = randint(1, scene.screenHeight())
+ship.setStayInScreen(true)
 let statusbar = statusbars.create(20, 4, StatusBarKind.Health)
 statusbar.attachToSprite(ship)
 statusbar.setLabel("HP")
@@ -288,12 +270,8 @@ info.onLifeZero(function on_life_zero() {
             ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
             ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
         `)
-    sprites.destroy(asteroid)
     sprites.destroy(ship)
 })
-
-let small_asteroid_images = [sprites.space.spaceSmallAsteroid0, sprites.space.spaceSmallAsteroid1, sprites.space.spaceSmallAsteroid2, sprites.space.spaceSmallAsteroid3, sprites.space.spaceSmallAsteroid4, sprites.space.spaceSmallAsteroid5]
-let large_asteroid_images = [sprites.space.spaceAsteroid0, sprites.space.spaceAsteroid1, sprites.space.spaceAsteroid2, sprites.space.spaceAsteroid3, sprites.space.spaceAsteroid4]
 function spawnAsteroid(isLarge: boolean) {
     let asteroid: Sprite;
     let x = randint(10, scene.screenWidth() - 10)
@@ -320,4 +298,3 @@ function spawnAsteroid(isLarge: boolean) {
 
 spawnAsteroid(false)
 spawnAsteroid(true)
-
