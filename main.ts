@@ -142,6 +142,36 @@ let ship = sprites.create(img`
 `, SpriteKind.Player)
 controller.player1.moveSprite(ship)
 ship.setStayInScreen(true)
+let bulletSpriteKind = SpriteKind.create()
+let bullet_img = img`
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+`
+controller.A.onEvent(ControllerButtonEvent.Pressed, function shoot() {
+    let bullet = sprites.create(bullet_img, bulletSpriteKind)
+    bullet.x = ship.x
+    bullet.y = ship.y
+    bullet.vy = -200
+    bullet.scale = .5
+})
+sprites.onOverlap(bulletSpriteKind, SpriteKind.Projectile, function onBulletHitAsteroid(bullet: Sprite, asteroid: Sprite) {
+    sprites.destroy(bullet)
+    sprites.destroy(asteroid)
+})
 let statusbar = statusbars.create(20, 4, StatusBarKind.Health)
 statusbar.attachToSprite(ship)
 statusbar.setLabel("HP")

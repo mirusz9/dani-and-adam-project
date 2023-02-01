@@ -160,6 +160,38 @@ ship = sprites.create(img("""
 controller.player1.move_sprite(ship)
 ship.set_stay_in_screen(True)
 
+bulletSpriteKind = SpriteKind.create()
+bullet_img = img("""
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+. . . . . . . 2 2 . . . . . . .
+""")
+
+def shoot():
+    bullet = sprites.create(bullet_img, bulletSpriteKind)
+    bullet.x = ship.x
+    bullet.y = ship.y
+    bullet.vy = -200
+    bullet.scale = .5
+controller.A.on_event(ControllerButtonEvent.PRESSED, shoot)
+
+def onBulletHitAsteroid(bullet, asteroid):
+    sprites.destroy(bullet)
+    sprites.destroy(asteroid)
+sprites.on_overlap(bulletSpriteKind, SpriteKind.projectile, onBulletHitAsteroid)
 
 statusbar = statusbars.create(20, 4, StatusBarKind.health)
 statusbar.attach_to_sprite(ship)
@@ -169,6 +201,7 @@ statusbar.set_offset_padding(0, 2)
 statusbar.set_bar_border(1, 13)
 
 shiphealth = 100
+
 def on_overlap(ship, asteroid):
     global shiphealth
     shiphealth -= 25
@@ -324,7 +357,6 @@ def spawnAsteroid(isLarge):
         asteroid.vy = 10
         asteroid.vx = vx * 2
         
-
     asteroid.x = x
     asteroid.y = y
     asteroid.set_bounce_on_wall(True)
