@@ -147,6 +147,15 @@ statusbar.attachToSprite(ship)
 statusbar.setLabel("HP")
 statusbar.positionDirection(CollisionDirection.Bottom)
 statusbar.setOffsetPadding(0, 2)
+statusbar.setBarBorder(1, 13)
+let shiphealth = 100
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Projectile, function on_overlap(ship: Sprite, asteroid: Sprite) {
+    
+    shiphealth -= 25
+    statusbar.setColor(7, 2)
+    statusbar.setBarSize(shiphealth / 5, 4)
+    sprites.destroy(asteroid)
+})
 info.onLifeZero(function on_life_zero() {
     scene.setBackgroundImage(img`
             ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff

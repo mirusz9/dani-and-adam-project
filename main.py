@@ -166,6 +166,18 @@ statusbar.attach_to_sprite(ship)
 statusbar.set_label("HP")
 statusbar.position_direction(CollisionDirection.BOTTOM)
 statusbar.set_offset_padding(0, 2)
+statusbar.set_bar_border(1, 13)
+
+shiphealth = 100
+def on_overlap(ship, asteroid):
+    global shiphealth
+    shiphealth -= 25
+    statusbar.set_color(7, 2)
+    statusbar.set_bar_size(shiphealth/5, 4)
+    sprites.destroy(asteroid)
+
+
+sprites.on_overlap(SpriteKind.player, SpriteKind.projectile, on_overlap)
 
 
 def on_life_zero():
