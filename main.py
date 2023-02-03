@@ -15,7 +15,6 @@ large_asteroid_images = [
     sprites.space.spaceAsteroid4,
 ]
 
-
 scene.set_background_image(img("""
     ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -180,17 +179,58 @@ bullet_img = img("""
 . . . . . . . 2 2 . . . . . . .
 """)
 
-def shoot():
+def spawnAsteroid(isLarge, spawnx, spawny):
+    x = spawnx if spawnx is not None else randint(10, scene.screen_width() - 10)
+    y = spawny if spawny is not None else -30
+    vx = randint(-5, 5)
+    if isLarge:
+        asteroid = sprites.create(large_asteroid_images[0], SpriteKind.projectile)
+        asteroid.scale = 2
+        animation.run_image_animation(asteroid, large_asteroid_images, 500, True)
+        asteroid.vy = 5
+        asteroid.vx = vx
+    else:
+        asteroid = sprites.create(small_asteroid_images[0], SpriteKind.projectile)
+        asteroid.scale = 1.5
+        animation.run_image_animation(asteroid, small_asteroid_images, 100, True)
+        asteroid.vy = 10
+        asteroid.vx = vx * 2
+        
+    asteroid.x = x
+    asteroid.y = y
+    asteroid.set_bounce_on_wall(True)
+    return asteroid
+
+def createBullet(x, y):
     bullet = sprites.create(bullet_img, bulletSpriteKind)
-    bullet.x = ship.x
-    bullet.y = ship.y
+    bullet.x = x
+    bullet.y = y
     bullet.vy = -200
     bullet.scale = .5
+    return bullet
+
+bullets = [createBullet(0, -10)]
+
+def shoot():
+    bullets.push(createBullet(ship.x, ship.y))
+    
 controller.A.on_event(ControllerButtonEvent.PRESSED, shoot)
+
+def destroyAsteroid(asteroid: Sprite):
+    # If the asteroid is large spawn two small asteroids
+    if asteroid.scale == 2:
+        spawnAsteroid(False, asteroid.x + 5, asteroid.y)
+        spawnAsteroid(False, asteroid.x - 5, asteroid.y)
+
+    sprites.destroy(asteroid)
+
 
 def onBulletHitAsteroid(bullet, asteroid):
     sprites.destroy(bullet)
-    sprites.destroy(asteroid)
+    info.change_score_by(1)
+    destroyAsteroid(asteroid)
+
+
 sprites.on_overlap(bulletSpriteKind, SpriteKind.projectile, onBulletHitAsteroid)
 
 statusbar = statusbars.create(20, 4, StatusBarKind.health)
@@ -200,18 +240,17 @@ statusbar.position_direction(CollisionDirection.BOTTOM)
 statusbar.set_offset_padding(0, 2)
 statusbar.set_bar_border(1, 13)
 
-shiphealth = 100
+info.set_life(100)
+info.show_life(False)
 
 def on_overlap(ship, asteroid):
-    global shiphealth
-    shiphealth -= 25
+    info.change_life_by(-25)
     statusbar.set_color(7, 2)
-    statusbar.set_bar_size(shiphealth/5, 4)
-    sprites.destroy(asteroid)
+    statusbar.set_bar_size(info.life()/5, 4)
+    destroyAsteroid(asteroid)
 
 
 sprites.on_overlap(SpriteKind.player, SpriteKind.projectile, on_overlap)
-
 
 def on_life_zero():
     scene.set_background_image(img("""
@@ -337,30 +376,24 @@ def on_life_zero():
             ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
         """))
     sprites.destroy(ship)
+    sprites.destroy_all_sprites_of_kind(SpriteKind.projectile)
+    
 info.on_life_zero(on_life_zero)
 
 
-def spawnAsteroid(isLarge):
-    x = randint(10, scene.screen_width() - 10)
-    y = -30
-    vx = randint(-5, 5)
-    if isLarge:
-        asteroid = sprites.create(large_asteroid_images[0], SpriteKind.projectile)
-        asteroid.scale = 2
-        animation.run_image_animation(asteroid, large_asteroid_images, 500, True)
-        asteroid.vy = 5
-        asteroid.vx = vx
-    else:
-        asteroid = sprites.create(small_asteroid_images[0], SpriteKind.projectile)
-        asteroid.scale = 1.5
-        animation.run_image_animation(asteroid, small_asteroid_images, 100, True)
-        asteroid.vy = 10
-        asteroid.vx = vx * 2
-        
-    asteroid.x = x
-    asteroid.y = y
-    asteroid.set_bounce_on_wall(True)
+def on_update():
+    if info.life() <= 0: return
+    newBullets = [createBullet(0, -10)]
+    for bullet in bullets:
+        if bullet.y < 0:
+            sprites.destroy(bullet)
+        else:
+            newBullets.push(bullet)
+    bullets = newBullets
 
-spawnAsteroid(False)
-spawnAsteroid(True)
+    if Math.percent_chance(2):
+        isLarge = Math.percent_chance(10)
+        spawnAsteroid(isLarge, None, None)
+    
+game.on_update(on_update)
 

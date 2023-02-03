@@ -1,5 +1,20 @@
-let small_asteroid_images = [sprites.space.spaceSmallAsteroid0, sprites.space.spaceSmallAsteroid1, sprites.space.spaceSmallAsteroid2, sprites.space.spaceSmallAsteroid3, sprites.space.spaceSmallAsteroid4, sprites.space.spaceSmallAsteroid5]
-let large_asteroid_images = [sprites.space.spaceAsteroid0, sprites.space.spaceAsteroid1, sprites.space.spaceAsteroid2, sprites.space.spaceAsteroid3, sprites.space.spaceAsteroid4]
+const small_asteroid_images = [
+    sprites.space.spaceSmallAsteroid0, 
+    sprites.space.spaceSmallAsteroid1, 
+    sprites.space.spaceSmallAsteroid2, 
+    sprites.space.spaceSmallAsteroid3, 
+    sprites.space.spaceSmallAsteroid4, 
+    sprites.space.spaceSmallAsteroid5
+]
+
+const large_asteroid_images = [
+    sprites.space.spaceAsteroid0, 
+    sprites.space.spaceAsteroid1,
+    sprites.space.spaceAsteroid2, 
+    sprites.space.spaceAsteroid3, 
+    sprites.space.spaceAsteroid4
+
+]
 scene.setBackgroundImage(img`
     ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -122,7 +137,8 @@ scene.setBackgroundImage(img`
     3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
     3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
 `)
-let ship = sprites.create(img`
+
+const ship = sprites.create(img`
     . . . . . . . . . . . . . . . .
     . . . . . . . c d . . . . . . .
     . . . . . . . c d . . . . . . .
@@ -140,10 +156,14 @@ let ship = sprites.create(img`
     . c c c c c e e 2 2 2 4 2 2 e .
     . c c c c c e e 2 2 2 2 4 2 e .
 `, SpriteKind.Player)
-controller.player1.moveSprite(ship)
+
+controller.moveSprite(ship)
 ship.setStayInScreen(true)
-let bulletSpriteKind = SpriteKind.create()
-let bullet_img = img`
+
+const powerUpSpriteKind = SpriteKind.create()
+let powerUp: Sprite;
+const bulletSpriteKind = SpriteKind.create()
+const bullet_img = img`
 . . . . . . . 2 2 . . . . . . .
 . . . . . . . 2 2 . . . . . . .
 . . . . . . . 2 2 . . . . . . .
@@ -161,32 +181,110 @@ let bullet_img = img`
 . . . . . . . 2 2 . . . . . . .
 . . . . . . . 2 2 . . . . . . .
 `
-controller.A.onEvent(ControllerButtonEvent.Pressed, function shoot() {
+function spawnAsteroid(isLarge: boolean, spawnx: number, spawny: number): Sprite {
+    let asteroid: Sprite;
+    const x = spawnx !== null ? spawnx : randint(10, scene.screenWidth() - 10)
+    const y = spawny !== null ? spawny : -30
+    const vx = randint(-5, 5)
+    if (isLarge) {
+        asteroid = sprites.create(large_asteroid_images[0], SpriteKind.Projectile)
+        asteroid.scale = 2
+        animation.runImageAnimation(asteroid, large_asteroid_images, 500, true)
+        asteroid.vy = 5
+        asteroid.vx = vx
+    } else {
+        asteroid = sprites.create(small_asteroid_images[0], SpriteKind.Projectile)
+        asteroid.scale = 1.5
+        animation.runImageAnimation(asteroid, small_asteroid_images, 100, true)
+        asteroid.vy = 10
+        asteroid.vx = vx * 2
+    }
+    
+    asteroid.x = x
+    asteroid.y = y
+    asteroid.setBounceOnWall(true)
+    return asteroid
+}
+
+function createBullet(x: number, y: number): Sprite {
     let bullet = sprites.create(bullet_img, bulletSpriteKind)
-    bullet.x = ship.x
-    bullet.y = ship.y
+    bullet.x = x
+    bullet.y = y
     bullet.vy = -200
     bullet.scale = .5
+    return bullet
+}
+
+let bullets: Sprite[] = []
+let isUsingPowerup = false;
+let canUsePowerup = true;
+
+controller.A.onEvent(ControllerButtonEvent.Pressed, function() {
+    if (!isUsingPowerup) bullets.push(createBullet(ship.x, ship.y))
 })
-sprites.onOverlap(bulletSpriteKind, SpriteKind.Projectile, function onBulletHitAsteroid(bullet: Sprite, asteroid: Sprite) {
-    sprites.destroy(bullet)
+
+controller.B.onEvent(ControllerButtonEvent.Pressed, function() {
+    if (!canUsePowerup) return;
+    isUsingPowerup = true;
+    canUsePowerup = false;
+    powerUp = sprites.create(bullet_img, powerUpSpriteKind)
+    powerUp.sy = 7
+    powerUp.x = ship.x
+    powerUp.y = ship.y - 60
+    setTimeout(function(){
+        powerUp.destroy()
+        powerUp = undefined;
+        isUsingPowerup = false;
+        setTimeout(function(){
+            canUsePowerup = true;
+        }, 10000)
+    }, 5000)
+
+})
+
+function destroyAsteroid(asteroid: Sprite) {
+    //  If the asteroid is large spawn two small asteroids
+    if (asteroid.scale == 2) {
+        spawnAsteroid(false, asteroid.x + 5, asteroid.y)
+        spawnAsteroid(false, asteroid.x - 5, asteroid.y)
+    }
+    
     sprites.destroy(asteroid)
+}
+
+let percentChanceToSpawnAsteroid = 2
+
+sprites.onOverlap(bulletSpriteKind, SpriteKind.Projectile, function (bullet: Sprite, asteroid: Sprite) {
+    sprites.destroy(bullet)
+    info.changeScoreBy(1)
+    percentChanceToSpawnAsteroid += 0.05
+    destroyAsteroid(asteroid)
 })
-let statusbar = statusbars.create(20, 4, StatusBarKind.Health)
+
+sprites.onOverlap(powerUpSpriteKind, SpriteKind.Projectile, function (powerup: Sprite, asteroid: Sprite) {
+    info.changeScoreBy(1)
+    percentChanceToSpawnAsteroid += 0.05
+    destroyAsteroid(asteroid)
+})
+
+const statusbar = statusbars.create(20, 4, StatusBarKind.Health)
 statusbar.attachToSprite(ship)
 statusbar.setLabel("HP")
 statusbar.positionDirection(CollisionDirection.Bottom)
 statusbar.setOffsetPadding(0, 2)
 statusbar.setBarBorder(1, 13)
-let shiphealth = 100
+
+info.setLife(100)
+info.showLife(false)
+
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Projectile, function on_overlap(ship: Sprite, asteroid: Sprite) {
-    
-    shiphealth -= 25
+    info.changeLifeBy(-25)
     statusbar.setColor(7, 2)
-    statusbar.setBarSize(shiphealth / 5, 4)
-    sprites.destroy(asteroid)
+    statusbar.setBarSize(info.life() / 5, 4)
+    destroyAsteroid(asteroid)
 })
-info.onLifeZero(function on_life_zero() {
+
+info.onLifeZero(function() {
     scene.setBackgroundImage(img`
             ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
             ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -310,30 +408,32 @@ info.onLifeZero(function on_life_zero() {
             ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
         `)
     sprites.destroy(ship)
+    sprites.destroyAllSpritesOfKind(SpriteKind.Projectile)
 })
-function spawnAsteroid(isLarge: boolean) {
-    let asteroid: Sprite;
-    let x = randint(10, scene.screenWidth() - 10)
-    let y = -30
-    let vx = randint(-5, 5)
-    if (isLarge) {
-        asteroid = sprites.create(large_asteroid_images[0], SpriteKind.Projectile)
-        asteroid.scale = 2
-        animation.runImageAnimation(asteroid, large_asteroid_images, 500, true)
-        asteroid.vy = 5
-        asteroid.vx = vx
-    } else {
-        asteroid = sprites.create(small_asteroid_images[0], SpriteKind.Projectile)
-        asteroid.scale = 1.5
-        animation.runImageAnimation(asteroid, small_asteroid_images, 100, true)
-        asteroid.vy = 10
-        asteroid.vx = vx * 2
-    }
-    
-    asteroid.x = x
-    asteroid.y = y
-    asteroid.setBounceOnWall(true)
-}
 
-spawnAsteroid(false)
-spawnAsteroid(true)
+game.onUpdate(function() {
+    if (info.life() <= 0) return
+
+    if (powerUp) {
+        powerUp.x = ship.x
+        powerUp.y = ship.y - 60
+    }
+
+    
+    const newBullets: Sprite[] = []
+
+    for (let bullet of bullets) {
+        if (bullet.y < 0) {
+            sprites.destroy(bullet)
+        } else {
+            newBullets.push(bullet)
+        }
+    }
+
+    bullets = newBullets
+
+    if (Math.percentChance(percentChanceToSpawnAsteroid)) {
+        const isLarge = Math.percentChance(10)
+        spawnAsteroid(isLarge, null, null)
+    }
+})
