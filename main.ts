@@ -271,6 +271,7 @@ function destroyAsteroid(asteroid: Sprite) {
 
 let percentChanceToSpawnAsteroid = 2
 
+// Destroy asteroids on overlap
 sprites.onOverlap(bulletSpriteKind, SpriteKind.Projectile, function (bullet: Sprite, asteroid: Sprite) {
     sprites.destroy(bullet)
     info.changeScoreBy(1)
