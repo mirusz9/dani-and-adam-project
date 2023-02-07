@@ -260,6 +260,9 @@ controller.B.onEvent(ControllerButtonEvent.Pressed, function() {
 
 // When a bullet hits an asteroid, it gets destroyed
 function destroyAsteroid(asteroid: Sprite) {
+
+    music.play(music.melodyPlayable(music.zapped), music.PlaybackMode.InBackground)
+
     //  If the asteroid is large spawn two small asteroids
     if (asteroid.scale == 2) {
         spawnAsteroid(false, asteroid.x + 5, asteroid.y)
