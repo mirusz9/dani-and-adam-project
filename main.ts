@@ -1,3 +1,4 @@
+// A collection of the small asteroid images for the animation
 const small_asteroid_images = [
     sprites.space.spaceSmallAsteroid0, 
     sprites.space.spaceSmallAsteroid1, 
@@ -7,6 +8,7 @@ const small_asteroid_images = [
     sprites.space.spaceSmallAsteroid5
 ]
 
+// A collection of the large asteroid images for the animation
 const large_asteroid_images = [
     sprites.space.spaceAsteroid0, 
     sprites.space.spaceAsteroid1,
@@ -15,6 +17,7 @@ const large_asteroid_images = [
     sprites.space.spaceAsteroid4
 
 ]
+
 scene.setBackgroundImage(img`
     ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -138,6 +141,7 @@ scene.setBackgroundImage(img`
     3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
 `)
 
+// Ship initialization
 const ship = sprites.create(img`
     . . . . . . . . . . . . . . . .
     . . . . . . . c d . . . . . . .
@@ -160,6 +164,7 @@ const ship = sprites.create(img`
 controller.moveSprite(ship)
 ship.setStayInScreen(true)
 
+// Define the types of attack the ship can use
 const powerUpSpriteKind = SpriteKind.create()
 let powerUp: Sprite;
 const bulletSpriteKind = SpriteKind.create()
@@ -181,11 +186,18 @@ const bullet_img = img`
 . . . . . . . 2 2 . . . . . . .
 . . . . . . . 2 2 . . . . . . .
 `
+
+// Spawn an asteroid with a random velocity
 function spawnAsteroid(isLarge: boolean, spawnx: number, spawny: number): Sprite {
     let asteroid: Sprite;
+    
+    // If the initial coordinates were not given, use random ones off screen.
     const x = spawnx !== null ? spawnx : randint(10, scene.screenWidth() - 10)
     const y = spawny !== null ? spawny : -30
+
     const vx = randint(-5, 5)
+
+    // Create the sprite and animate
     if (isLarge) {
         asteroid = sprites.create(large_asteroid_images[0], SpriteKind.Projectile)
         asteroid.scale = 2
@@ -206,6 +218,7 @@ function spawnAsteroid(isLarge: boolean, spawnx: number, spawny: number): Sprite
     return asteroid
 }
 
+// Shoot a bullet from the given coordinates
 function createBullet(x: number, y: number): Sprite {
     let bullet = sprites.create(bullet_img, bulletSpriteKind)
     bullet.x = x
@@ -215,14 +228,17 @@ function createBullet(x: number, y: number): Sprite {
     return bullet
 }
 
+// Keep track of the bullets to prevent a memory leak
 let bullets: Sprite[] = []
 let isUsingPowerup = false;
 let canUsePowerup = true;
 
+// On button press, shoot the bullet
 controller.A.onEvent(ControllerButtonEvent.Pressed, function() {
     if (!isUsingPowerup) bullets.push(createBullet(ship.x, ship.y))
 })
 
+// Create a powerup on B press and start the countdown
 controller.B.onEvent(ControllerButtonEvent.Pressed, function() {
     if (!canUsePowerup) return;
     isUsingPowerup = true;
@@ -242,6 +258,7 @@ controller.B.onEvent(ControllerButtonEvent.Pressed, function() {
 
 })
 
+// When a bullet hits an asteroid, it gets destroyed
 function destroyAsteroid(asteroid: Sprite) {
     //  If the asteroid is large spawn two small asteroids
     if (asteroid.scale == 2) {
@@ -267,6 +284,7 @@ sprites.onOverlap(powerUpSpriteKind, SpriteKind.Projectile, function (powerup: S
     destroyAsteroid(asteroid)
 })
 
+// Create the health bar for the ship
 const statusbar = statusbars.create(20, 4, StatusBarKind.Health)
 statusbar.attachToSprite(ship)
 statusbar.setLabel("HP")
@@ -277,6 +295,7 @@ statusbar.setBarBorder(1, 13)
 info.setLife(100)
 info.showLife(false)
 
+// When an asteroid hits the ship, decrease the life and destroy the asteroid
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Projectile, function on_overlap(ship: Sprite, asteroid: Sprite) {
     info.changeLifeBy(-25)
     statusbar.setColor(7, 2)
@@ -284,6 +303,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Projectile, function on_overlap(
     destroyAsteroid(asteroid)
 })
 
+// End screen
 info.onLifeZero(function() {
     scene.setBackgroundImage(img`
             ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -411,9 +431,12 @@ info.onLifeZero(function() {
     sprites.destroyAllSpritesOfKind(SpriteKind.Projectile)
 })
 
+
+// Game loop
 game.onUpdate(function() {
     if (info.life() <= 0) return
 
+    // Move the powerup with the player
     if (powerUp) {
         powerUp.x = ship.x
         powerUp.y = ship.y - 60
@@ -422,6 +445,7 @@ game.onUpdate(function() {
     
     const newBullets: Sprite[] = []
 
+    // If the bullets are off screen, destroy them to keep the game smooth
     for (let bullet of bullets) {
         if (bullet.y < 0) {
             sprites.destroy(bullet)
@@ -432,6 +456,7 @@ game.onUpdate(function() {
 
     bullets = newBullets
 
+    // Spawn asteroids
     if (Math.percentChance(percentChanceToSpawnAsteroid)) {
         const isLarge = Math.percentChance(10)
         spawnAsteroid(isLarge, null, null)
